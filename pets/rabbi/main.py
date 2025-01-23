@@ -5,25 +5,27 @@ import pygame
 import time
 from adafruit_display_text import label
 import random
-
 import math
+import terminalio
 
-# initalize
+# initialize
 pygame.init()
 display = PyGameDisplay(width=128, height=128)
 splash = displayio.Group()
 display.show(splash)
+
 # display living room background
 room_background = displayio.OnDiskBitmap("livingRoomBackground.bmp")
 bg_sprite = displayio.TileGrid(room_background, pixel_shader=room_background.pixel_shader)
 splash.append(bg_sprite)
+
 # add pet sprite
-# NEED TO CHANGE/MAKE SURE FULLY CUSTOMIZED
 # Load the pet sprite sheet (idleRabbi.bmp)
 rabbi_sheet = displayio.OnDiskBitmap("/pets/rabbi/idleRabbi.bmp")
-
 tile_width = 64
 tile_height = 64
+frame_count = 27  # Total frames in rabbi sprite sheet
+
 rabbi_sprite = displayio.TileGrid(
     rabbi_sheet,
     pixel_shader=rabbi_sheet.pixel_shader,
@@ -39,10 +41,13 @@ rabbi_sprite = displayio.TileGrid(
 splash.append(rabbi_sprite)  # Add sprite to the splash (display) group
 
 # food collecting game (big chungus)
-# load food animations - got rid of water sheet, just cookie & carrot collecting, will use water bowl differently
+# load food animations - got rid of water sheet, just cookie & carrot collecting
 carrot_sheet = displayio.OnDiskBitmap("/pets/rabbi/bouncingCarrot.bmp")
 cookie_sheet = displayio.OnDiskBitmap("/pets/rabbi/bouncingCookie.bmp")
+
 # empty list for food properties
+food_items = []  # Initialize food_items list
+
 def spawn_food():
     food_type = random.choice([carrot_sheet, cookie_sheet])
     x_position = random.randint(0, display.width - 16)
@@ -71,10 +76,10 @@ def check_collision(sprite1, sprite2):
         sprite1.y < sprite2.y + 16 and
         sprite1.y + 16 > sprite2.y
     )
+
 # score count
 score = 0
-font = terminalio.FONT  # default font
-score_label = label.Label(font, text="Score: 0", color=0xFFFFFF)
+score_label = label.Label(terminalio.FONT, text="Score: 0", color=0xFFFFFF)
 score_label.x = 10
 score_label.y = 10
 splash.append(score_label)
@@ -97,39 +102,39 @@ while True:
 
     if not game_over:
         if keys[pygame.K_LEFT]:
-            pet_sprite.x -= speed
+            rabbi_sprite.x -= speed
         if keys[pygame.K_RIGHT]:
-            pet_sprite.x += speed
+            rabbi_sprite.x += speed
 
         # Randomly spawn food items
         if random.random() < 0.05:  # Adjust spawn rate
             spawn_food()
             
-   # move food down, check for collisions
+    # move food down, check for collisions
     for food in food_items:
         food.y += 2  # speed food falls down
 
-  # Bounce effect
+        # Bounce effect
         food.x += math.sin(pygame.time.get_ticks() * bounce_speed) * bounce_amplitude
-      
+
         # update animation frames for food
         food.frame += food.frame_rate
         if food.frame >= food.frame_count:
             food.frame = 0  # Reset to the first frame after reaching the last frame
 
- food[0] = int(food.frame)  # set current frame for current food item
+        food[0] = int(food.frame)  # set current frame for current food item
 
-if food.y > display.height:
+        if food.y > display.height:
             splash.remove(food)
             food_items.remove(food)
-        elif check_collision(pet_sprite, food):
+        elif check_collision(rabbi_sprite, food):
             score += 1  # Increment score
             score_label.text = f"Score: {score}"  # Update score display
             splash.remove(food)
             food_items.remove(food)
 
     # Animate pet sprite
-    pet_sprite[0] = frame
+    rabbi_sprite[0] = frame
     frame = (frame + 1) % frame_count
 
     time.sleep(0.1)
