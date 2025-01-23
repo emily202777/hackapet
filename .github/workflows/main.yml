@@ -1,0 +1,27 @@
+name: Run Python Game
+
+on:
+  push:
+    branches:
+      - main  # This triggers the action when you push to the main branch
+
+jobs:
+  run_game:
+    runs-on: ubuntu-latest  # Runs the workflow on an Ubuntu server
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2  # Check out your code from the repository
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'  # Set Python version to 3.x
+
+    - name: Install dependencies
+      run: |
+        pip install pygame
+        pip install blinka_displayio-pygamedisplay
+
+    - name: Run the game
+      run: python3 main.py  # Run the main.py script
